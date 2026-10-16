@@ -12,7 +12,6 @@ Cookies: файл bolt_state.json або змінна BOLT_STATE (base64 цьо�
 """
 import argparse, base64, datetime, os, subprocess, sys, time, urllib.parse, urllib.request
 from pathlib import Path
-from playwright.sync_api import sync_playwright
 
 STATE_FILE = Path(__file__).with_name("bolt_state.json")
 CLOSED = ["зачинено", "закрито", "не приймає", "тимчасово недоступ", "недоступний",
@@ -79,6 +78,7 @@ def main():
         print("Тестове повідомлення надіслано" if ok else "Не вдалося надіслати")
         sys.exit(0 if ok else 1)
 
+    from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not a.setup)
         ctx = browser.new_context(locale="uk-UA", storage_state=storage_state(),
