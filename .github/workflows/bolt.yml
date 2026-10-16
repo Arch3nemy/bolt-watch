@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "*/5 * * * *"   # кожні 5 хв (GitHub може запізнюватися)
   workflow_dispatch:
+    inputs:
+      test:
+        description: "Лише надіслати тестове повідомлення в Telegram"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Playwright
+        if: ${{ !inputs.test }}
         run: |
           pip install playwright
           python -m playwright install --with-deps chromium
@@ -33,7 +39,7 @@ jobs:
           BOLT_STATE: ${{ secrets.BOLT_STATE }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python bolt_watch.py --once
+        run: python bolt_watch.py ${{ inputs.test && '--test' || '--once' }}
       - name: Stop watching after success
         if: steps.bolt.outputs.open == 'true'
         env:

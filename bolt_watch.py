@@ -23,12 +23,15 @@ OPEN = ["додати в кошик", "до кошика", "add to cart", "add t
 def telegram(msg):
     token, chat = os.environ.get("TG_TOKEN"), os.environ.get("TG_CHAT_ID")
     if not (token and chat):
-        return
+        print("Telegram: TG_TOKEN або TG_CHAT_ID не задано")
+        return False
     data = urllib.parse.urlencode({"chat_id": chat, "text": msg}).encode()
     try:
         urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data, timeout=15)
     except Exception as e:
         print(f"Telegram помилка: {e}")
+        return False
+    return True
 
 
 def notify(msg):
@@ -68,7 +71,13 @@ def main():
     ap.add_argument("--interval", type=int, default=90, help="секунд між перевірками")
     ap.add_argument("--once", action="store_true", help="одна перевірка (для GitHub Actions)")
     ap.add_argument("--setup", action="store_true")
+    ap.add_argument("--test", action="store_true", help="лише надіслати тестове повідомлення в Telegram")
     a = ap.parse_args()
+
+    if a.test:
+        ok = telegram("✅ Тест: бот Bolt watch працює і зможе вам написати.")
+        print("Тестове повідомлення надіслано" if ok else "Не вдалося надіслати")
+        sys.exit(0 if ok else 1)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not a.setup)
