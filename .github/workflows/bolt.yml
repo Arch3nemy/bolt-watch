@@ -39,6 +39,7 @@ jobs:
           BOLT_STATE: ${{ secrets.BOLT_STATE }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          PYTHONUNBUFFERED: "1"
         run: python bolt_watch.py ${{ inputs.test && '--test' || '--interval 120 --max-minutes 340' }}
       - name: Stop watching after success
         if: steps.bolt.outputs.open == 'true'
