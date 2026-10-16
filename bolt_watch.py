@@ -50,7 +50,9 @@ def storage_state():
 
 
 def check(page, url):
-    page.goto(url, wait_until="networkidle", timeout=60000)
+    page.goto(url, wait_until="domcontentloaded", timeout=60000)
+    # чекаємо, поки з'явиться меню з цінами — інакше сторінка ще не завантажилась
+    page.wait_for_function("document.body.innerText.includes('₴')", timeout=45000)
     page.wait_for_timeout(3000)
     text = page.inner_text("body").lower()
     hit_closed = [w for w in CLOSED if w in text]
