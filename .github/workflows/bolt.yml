@@ -1,0 +1,40 @@
+name: Bolt McDonald's watch
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # кожні 5 хв (GitHub може запізнюватися)
+  workflow_dispatch:
+
+permissions:
+  actions: write   # щоб вимкнути себе після успіху
+
+concurrency:
+  group: bolt-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Check Bolt Food
+        id: bolt
+        env:
+          BOLT_URL: ${{ secrets.BOLT_URL }}
+          BOLT_STATE: ${{ secrets.BOLT_STATE }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python bolt_watch.py --once
+      - name: Stop watching after success
+        if: steps.bolt.outputs.open == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow disable bolt.yml --repo "$GITHUB_REPOSITORY"
