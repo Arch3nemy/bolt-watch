@@ -2,7 +2,7 @@ name: Bolt McDonald's watch
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # кожні 5 хв (GitHub може запізнюватися)
+    - cron: "7 * * * *"    # раз на годину перезапускає довгий запуск, якщо він зупинився
   workflow_dispatch:
     inputs:
       test:
@@ -21,7 +21,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,7 +39,7 @@ jobs:
           BOLT_STATE: ${{ secrets.BOLT_STATE }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python bolt_watch.py ${{ inputs.test && '--test' || '--once' }}
+        run: python bolt_watch.py ${{ inputs.test && '--test' || '--interval 120 --max-minutes 340' }}
       - name: Stop watching after success
         if: steps.bolt.outputs.open == 'true'
         env:

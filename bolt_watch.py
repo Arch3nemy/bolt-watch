@@ -69,6 +69,7 @@ def main():
     ap.add_argument("url", nargs="?", default=os.environ.get("BOLT_URL"))
     ap.add_argument("--interval", type=int, default=90, help="секунд між перевірками")
     ap.add_argument("--once", action="store_true", help="одна перевірка (для GitHub Actions)")
+    ap.add_argument("--max-minutes", type=float, default=0, help="зупинитися після N хвилин (0 = без ліміту)")
     ap.add_argument("--setup", action="store_true")
     ap.add_argument("--test", action="store_true", help="лише надіслати тестове повідомлення в Telegram")
     a = ap.parse_args()
@@ -98,7 +99,8 @@ def main():
         if not a.url:
             sys.exit("Вкажіть URL сторінки закладу (аргумент або BOLT_URL)")
 
-        if not a.once:
+        deadline = time.time() + a.max_minutes * 60 if a.max_minutes else None
+        if not a.once and not os.environ.get("GITHUB_ACTIONS"):
             telegram(f"👀 Почав стежити за McDonald's: {a.url}")
             print(f"Стежу за {a.url} кожні {a.interval} с. Ctrl+C — стоп.")
         while True:
@@ -118,7 +120,7 @@ def main():
                 return
             print(f"[{now}] ще недоступний ({', '.join(closed)})")
             gh_output("open", "false")
-            if a.once:
+            if a.once or (deadline and time.time() + a.interval > deadline):
                 return
             time.sleep(a.interval)
 
